@@ -24,7 +24,7 @@ export const executeHttpNode = async (
     const headers = config.headers
       ? Object.fromEntries(
           Object.entries(config.headers).map(([k, v]) => [k, interpolateString(v, input)])
-        : undefined;
+        ) : undefined;
     
     const axiosConfig: AxiosRequestConfig = {
       method: config.method,
