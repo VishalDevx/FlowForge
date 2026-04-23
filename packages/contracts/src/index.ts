@@ -391,6 +391,8 @@ export const JobResultSchema = z.object({
   }).optional(),
 });
 
+export type JobResult = z.infer<typeof JobResultSchema>;
+
 export const UserCreateInput = z.object({
   email: z.string().email(),
   name: z.string().min(1).max(100),

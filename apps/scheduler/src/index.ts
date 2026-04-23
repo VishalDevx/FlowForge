@@ -2,9 +2,18 @@ import cron from 'node-cron';
 import { PrismaClient } from '@flowforge/db';
 import logger from '@flowforge/logger';
 import { createExecutionJob, createScheduledJob } from '@flowforge/queue';
-import { generateIdempotencyKey } from '@flowforge/contracts';
 
 const prisma = new PrismaClient();
+
+const generateIdempotencyKey = () => {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+};
+
+interface WorkflowNode {
+  id: string;
+  type: string;
+  config: Record<string, unknown>;
+}
 
 const processCronTriggers = async () => {
   logger.info('Processing cron triggers');
@@ -18,6 +27,10 @@ const processCronTriggers = async () => {
     try {
       const publishedVersion = trigger.workflow.versions[0];
       if (!publishedVersion) continue;
+      
+      const nodes = (publishedVersion.nodes as unknown as WorkflowNode[]) || [];
+      const firstNode = nodes[0];
+      if (!firstNode) continue;
       
       const now = new Date();
       const triggerConfig = trigger.config as { timezone?: string; expression?: string };
@@ -36,6 +49,7 @@ const processCronTriggers = async () => {
       
       const execution = await prisma.execution.create({
         data: {
+          workspaceId: trigger.workflow.workspaceId,
           workflowId: trigger.workflowId,
           workflowVersionId: publishedVersion.id,
           triggerType: 'cron',
@@ -47,9 +61,9 @@ const processCronTriggers = async () => {
       
       await createExecutionJob({
         executionId: execution.id,
-        nodeId: publishedVersion.nodes[0]?.id || '',
-        nodeType: publishedVersion.nodes[0]?.type || 'trigger.cron',
-        config: publishedVersion.nodes[0]?.config || {},
+        nodeId: firstNode.id,
+        nodeType: firstNode.type as any,
+        config: firstNode.config || {},
         input: {},
         retryCount: 0,
         executionContext: {
@@ -87,13 +101,17 @@ const processScheduledTriggers = async () => {
       const publishedVersion = trigger.workflow.versions[0];
       if (!publishedVersion) continue;
       
+      const nodes = (publishedVersion.nodes as unknown as WorkflowNode[]) || [];
+      const firstNode = nodes[0];
+      if (!firstNode) continue;
+      
       const idempotencyKey = `scheduled-${trigger.id}-${runAt.getTime()}-${generateIdempotencyKey()}`;
       
       await createScheduledJob({
         executionId: trigger.id,
-        nodeId: publishedVersion.nodes[0]?.id || '',
-        nodeType: publishedVersion.nodes[0]?.type || 'trigger.manual',
-        config: publishedVersion.nodes[0]?.config || {},
+        nodeId: firstNode.id,
+        nodeType: firstNode.type as any,
+        config: firstNode.config || {},
         input: {},
         retryCount: 0,
         executionContext: {

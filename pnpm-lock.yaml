@@ -113,6 +113,9 @@ importers:
       '@types/node':
         specifier: ^22.10.5
         version: 22.19.17
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -278,6 +281,9 @@ importers:
       '@flowforge/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@flowforge/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@flowforge/workflow-engine':
         specifier: workspace:*
         version: link:../workflow-engine
@@ -1032,6 +1038,9 @@ packages:
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
+
+  '@types/node-cron@3.0.11':
+    resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
 
   '@types/node@22.19.17':
     resolution: {integrity: sha512-wGdMcf+vPYM6jikpS/qhg6WiqSV/OhG+jeeHT/KlVqxYfD40iYJf9/AE1uQxVWFvU7MipKRkRv8NSHiCGgPr8Q==}
@@ -2867,6 +2876,8 @@ snapshots:
       '@types/node': 22.19.17
 
   '@types/ms@2.1.0': {}
+
+  '@types/node-cron@3.0.11': {}
 
   '@types/node@22.19.17':
     dependencies:

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@flowforge/contracts": "workspace:*",
+    "@flowforge/logger": "workspace:*",
     "@flowforge/workflow-engine": "workspace:*",
     "axios": "^1.7.9",
     "nodemailer": "^6.9.16",

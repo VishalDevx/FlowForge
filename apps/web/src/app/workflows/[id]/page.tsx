@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { use } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -33,7 +34,8 @@ const initialNodes: Node[] = [
 
 const initialEdges: Edge[] = [];
 
-export default function WorkflowEditorPage({ params }: { params: { id: string } }) {
+export default function WorkflowEditorPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [saving, setSaving] = useState(false);
@@ -54,7 +56,7 @@ export default function WorkflowEditorPage({ params }: { params: { id: string } 
     setSaving(true);
     const token = localStorage.getItem('accessToken');
     try {
-      await fetch(`/api/v1/workflows/${params.id}/versions`, {
+      await fetch(`/api/v1/workflows/${id}/versions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
