@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml ./
+COPY apps/realtime/package.json ./apps/realtime/
+COPY packages/*/package.json ./packages/
+
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+WORKDIR /app/apps/realtime
+
+CMD ["npm", "run", "dev"]

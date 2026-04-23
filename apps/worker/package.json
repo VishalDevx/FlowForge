@@ -1,0 +1,27 @@
+{
+  "name": "@flowforge/worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@flowforge/contracts": "workspace:*",
+    "@flowforge/db": "workspace:*",
+    "@flowforge/logger": "workspace:*",
+    "@flowforge/nodes": "workspace:*",
+    "@flowforge/observability": "workspace:*",
+    "@flowforge/queue": "workspace:*",
+    "@flowforge/redis": "workspace:*",
+    "@flowforge/workflow-engine": "workspace:*",
+    "bullmq": "^5.28.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

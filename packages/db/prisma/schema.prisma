@@ -1,0 +1,435 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  owner
+  admin
+  developer
+  operator
+  viewer
+}
+
+enum TriggerType {
+  webhook
+  cron
+  manual
+  event
+  scheduled
+}
+
+enum NodeType {
+  trigger_webhook
+  trigger_cron
+  trigger_manual
+  trigger_event
+  action_http
+  action_email
+  action_db
+  action_transform
+  action_condition
+  action_delay
+  action_queue
+  action_callWorkflow
+  action_webhook
+  action_notify
+  logic_branch
+  logic_loop
+  logic_merge
+  logic_filter
+  logic_map
+  logic_retry
+  logic_errorBoundary
+}
+
+enum ExecutionStatus {
+  queued
+  running
+  paused
+  waiting
+  success
+  failed
+  cancelled
+  dead_lettered
+}
+
+enum ExecutionNodeStatus {
+  pending
+  queued
+  running
+  success
+  failed
+  skipped
+  cancelled
+  dead_lettered
+}
+
+enum WorkflowVersionStatus {
+  draft
+  published
+  archived
+}
+
+enum AuditAction {
+  user_registered
+  user_login
+  user_logout
+  user_password_changed
+  user_email_verified
+  workspace_created
+  workspace_updated
+  workspace_deleted
+  member_invited
+  member_accepted
+  member_removed
+  member_role_changed
+  workflow_created
+  workflow_updated
+  workflow_deleted
+  workflow_published
+  workflow_duplicated
+  workflow_versioned
+  trigger_created
+  trigger_updated
+  trigger_deleted
+  trigger_enabled
+  trigger_disabled
+  execution_started
+  execution_completed
+  execution_failed
+  execution_cancelled
+  execution_retried
+  secret_created
+  secret_updated
+  secret_deleted
+  secret_rotated
+  api_key_created
+  api_key_deleted
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique
+  name         String
+  passwordHash String    @map("password_hash")
+  emailVerified Boolean @default(false) @map("email_verified")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  sessions        Session[]
+  refreshTokens RefreshToken[]
+  apiKeys        ApiKey[]
+  workspaceMembers WorkspaceMember[]
+  createdAuditLogs   AuditLog[] @relation("AuditLogUser")
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model ApiKey {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  workspaceId String?  @map("workspace_id") @db.Uuid
+  name       String
+  prefix     String
+  keyHash    String   @map("key_hash")
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt  DateTime? @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace?  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([workspaceId])
+  @@map("api_keys")
+}
+
+model Workspace {
+  id        String   @id @default(uuid()) @db.Uuid
+  name     String
+  slug     String   @unique
+  ownerId  String   @map("owner_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  members      WorkspaceMember[]
+  workflows    Workflow[]
+  invitations Invitation[]
+  secrets    Secret[]
+  createdAuditLogs AuditLog[] @relation("AuditLogWorkspace")
+  executions Execution[]
+  envVars   EnvironmentVariable[]
+  apiKeys  ApiKey[]
+
+  @@index([slug])
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  role       Role
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+  @@map("workspace_members")
+}
+
+model Invitation {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String  @map("workspace_id") @db.Uuid
+  email      String
+  role       Role
+  token      String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([token])
+  @@map("invitations")
+}
+
+model Workflow {
+  id               String    @id @default(uuid()) @db.Uuid
+  workspaceId      String    @map("workspace_id") @db.Uuid
+  name             String
+  description     String?
+  publishedVersionId String? @map("published_version_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  versions  WorkflowVersion[]
+  triggers WorkflowTrigger[]
+  executions Execution[]
+
+  @@index([workspaceId])
+  @@map("workflows")
+}
+
+model WorkflowVersion {
+  id              String              @id @default(uuid()) @db.Uuid
+  workflowId      String              @map("workflow_id") @db.Uuid
+  version       Int
+  status        WorkflowVersionStatus @default(draft)
+  nodes         Json
+  edges         Json
+  executionPolicy String             @default("stop-on-first-failure") @map("execution_policy")
+  retryPolicy   Json?              @map("retry_policy")
+  timeoutMs    Int?               @map("timeout_ms")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  createdBy   String             @map("created_by") @db.Uuid
+
+  workflow   Workflow    @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  executions Execution[]
+
+  @@unique([workflowId, version])
+  @@index([workflowId])
+  @@map("workflow_versions")
+}
+
+model WorkflowTrigger {
+  id          String      @id @default(uuid()) @db.Uuid
+  workflowId  String      @map("workflow_id") @db.Uuid
+  type       TriggerType
+  config     Json
+  enabled    Boolean    @default(true)
+  webhookKey String?    @map("webhook_key")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([webhookKey])
+  @@map("workflow_triggers")
+}
+
+model Execution {
+  id                String           @id @default(uuid()) @db.Uuid
+  workspaceId       String           @map("workspace_id") @db.Uuid
+  workflowId        String           @map("workflow_id") @db.Uuid
+  workflowVersionId String           @map("workflow_version_id") @db.Uuid
+  triggerType      TriggerType      @map("trigger_type")
+  triggerId       String?         @map("trigger_id") @db.Uuid
+  status          ExecutionStatus @default(queued)
+  input           Json?           @map("input")
+  output          Json?           @map("output")
+  error           String?
+  idempotencyKey  String?         @map("idempotency_key") @db.Uuid
+  startedAt       DateTime?       @map("started_at")
+  finishedAt     DateTime?       @map("finished_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  createdBy      String?          @map("created_by") @db.Uuid
+
+  workspace        Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workflow        Workflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  version         WorkflowVersion @relation(fields: [workflowVersionId], references: [id], onDelete: Cascade)
+  nodes           ExecutionNode[]
+  logs            ExecutionLog[]
+  deadLetters    DeadLetterJob[]
+
+  @@index([workflowId])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([idempotencyKey])
+  @@map("executions")
+}
+
+model ExecutionNode {
+  id           String             @id @default(uuid()) @db.Uuid
+  executionId String             @map("execution_id") @db.Uuid
+  nodeId      String             @map("node_id") @db.Uuid
+  nodeType    NodeType           @map("node_type")
+  status      ExecutionNodeStatus @default(pending)
+  input       Json?             @map("input")
+  output      Json?             @map("output")
+  error       String?
+  retryCount Int              @default(0) @map("retry_count")
+  startedAt  DateTime?        @map("started_at")
+  finishedAt DateTime?        @map("finished_at")
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  execution Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@map("execution_nodes")
+}
+
+model ExecutionLog {
+  id              String    @id @default(uuid()) @db.Uuid
+  executionId     String    @map("execution_id") @db.Uuid
+  executionNodeId String?   @map("execution_node_id") @db.Uuid
+  level          String
+  message        String
+  meta          Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  execution Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([level])
+  @@map("execution_logs")
+}
+
+model DeadLetterJob {
+  id             String   @id @default(uuid()) @db.Uuid
+  executionId    String   @map("execution_id") @db.Uuid
+  executionNodeId String? @map("execution_node_id") @db.Uuid
+  nodeId         String?  @map("node_id") @db.Uuid
+  jobData        Json     @map("job_data")
+  error         String
+  attempts      Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  execution Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@map("dead_letter_jobs")
+}
+
+model Secret {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String  @map("workspace_id") @db.Uuid
+  name        String
+  value       String
+  description String?
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@map("secrets")
+}
+
+model EnvironmentVariable {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String  @map("workspace_id") @db.Uuid
+  name       String
+  value      String
+  description String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@map("environment_variables")
+}
+
+model AuditLog {
+  id         String     @id @default(uuid()) @db.Uuid
+  workspaceId String?   @map("workspace_id") @db.Uuid
+  userId     String?    @map("user_id") @db.Uuid
+  action    AuditAction
+  targetType String?    @map("target_type")
+  targetId  String?    @map("target_id") @db.Uuid
+  meta      Json?
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  workspace  Workspace? @relation("AuditLogWorkspace", fields: [workspaceId], references: [id])
+  user      User?       @relation("AuditLogUser", fields: [userId], references: [id])
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model WorkerHeartbeat {
+  id       String   @id @default(uuid()) @db.Uuid
+  workerId String   @map("worker_id")
+  status   String
+  meta     Json?
+  lastSeen DateTime @map("last_seen")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([workerId])
+  @@map("worker_heartbeats")
+}

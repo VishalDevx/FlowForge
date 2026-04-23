@@ -1,0 +1,21 @@
+# Backend API Service
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/*/package.json ./packages/
+
+RUN pnpm install --frozen-lockfile --filter=@flowforge/api
+
+COPY . .
+
+WORKDIR /app/apps/api
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]
