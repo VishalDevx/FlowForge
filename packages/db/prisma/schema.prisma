@@ -259,7 +259,7 @@ model WorkflowVersion {
   retryPolicy   Json?              @map("retry_policy")
   timeoutMs    Int?               @map("timeout_ms")
   createdAt    DateTime           @default(now()) @map("created_at")
-  createdBy   String             @map("created_by") @db.Uuid
+  createdBy   String?             @map("created_by") @db.Uuid
 
   workflow   Workflow    @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   executions Execution[]
