@@ -1,4 +1,4 @@
-import { prisma } from '../index.js';
+import { prisma } from '../db.js';
 import type { CreateWorkflowInput, UpdateWorkflowInput, WorkflowVersionInput, CreateExecutionInput, PaginationQuery } from '../dtos/index.js';
 
 export const workflowService = {
@@ -100,7 +100,7 @@ export const workflowService = {
     return updated;
   },
 
-  async delete(id: string, userId: string) {
+  async delete(id: string, _userId: string) {
     const workflow = await prisma.workflow.findUnique({ where: { id } });
     
     if (!workflow) throw new Error('NOT_FOUND');
@@ -212,7 +212,7 @@ export const executionService = {
     };
   },
 
-  async findById(id: string, userId: string) {
+  async findById(id: string, _userId: string) {
     const execution = await prisma.execution.findUnique({
       where: { id },
       include: { nodes: true, logs: { orderBy: { createdAt: 'desc' }, take: 100 } },

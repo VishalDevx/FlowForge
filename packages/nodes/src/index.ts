@@ -1,8 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosError } from 'axios';
 import nodemailer from 'nodemailer';
 import { createLogger } from '@flowforge/logger';
-import { JobDataSchema, type JobResult, type NodeType } from '@flowforge/contracts';
-import { type GraphNode } from '@flowforge/workflow-engine';
+import { type JobResult, type NodeType } from '@flowforge/contracts';
 
 const logger = createLogger('@flowforge/nodes');
 

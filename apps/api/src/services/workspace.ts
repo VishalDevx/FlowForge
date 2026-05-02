@@ -1,4 +1,4 @@
-import { prisma } from '../index.js';
+import { prisma } from '../db.js';
 import type { CreateWorkspaceInput, UpdateWorkspaceInput, PaginationQuery } from '../dtos/index.js';
 import { generateSlug, generateId } from '../utils/index.js';
 

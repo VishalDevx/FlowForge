@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
 import { PrismaClient } from '@flowforge/db';
@@ -5,7 +6,7 @@ import logger from '@flowforge/logger';
 import { websocketConnections } from '@flowforge/observability';
 
 const prisma = new PrismaClient();
-const PORT = parseInt(process.env.PORT || '3001');
+const PORT = parseInt(process.env.REALTIME_PORT || '3001');
 
 const startRealtime = async () => {
   const httpServer = createServer();

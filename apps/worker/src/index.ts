@@ -1,11 +1,10 @@
+import 'dotenv/config';
 import { Worker, Job } from 'bullmq';
 import { PrismaClient } from '@flowforge/db';
 import logger from '@flowforge/logger';
 import { executeNode } from '@flowforge/nodes';
 import {
-  executionQueue,
   retryQueue,
-  deadLetterQueue,
   moveToDeadLetter,
   EXECUTION_QUEUE,
 } from '@flowforge/queue';
@@ -19,7 +18,7 @@ const prisma = new PrismaClient();
 const WORKER_ID = `worker-${process.env.HOSTNAME || process.pid}`;
 
 const processJob = async (job: Job) => {
-  const { executionId, nodeId, nodeType, config, input, retryCount, executionContext } = job.data;
+  const { executionId, nodeId, nodeType, config, input, retryCount } = job.data;
   
   logger.info({ executionId, nodeId, nodeType }, 'Processing node execution');
   
@@ -97,6 +96,7 @@ const startWorker = async () => {
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379'),
+        password: process.env.REDIS_PASSWORD,
       },
       concurrency: parseInt(process.env.WORKER_CONCURRENCY || '5'),
     }

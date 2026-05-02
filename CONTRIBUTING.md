@@ -42,9 +42,8 @@ FlowForge is a distributed workflow execution platform with:
 
 - Node.js 20+
 - pnpm 9+
-- Docker & Docker Compose
-- PostgreSQL 16+
-- Redis 7+
+- PostgreSQL 16+ (local or cloud)
+- Redis 7+ (local or cloud)
 
 ### Local Environment Setup
 
@@ -54,42 +53,32 @@ git clone https://github.com/flowforge/flowforge.git
 cd flowforge
 ```
 
-2. **Start infrastructure**
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
-
-3. **Install dependencies**
+2. **Install dependencies**
 ```bash
 pnpm install
 ```
 
+3. **Configure environment variables**
+```bash
+cp .env.example .env
+# Edit .env with your DATABASE_URL, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
+```
+
 4. **Set up database**
 ```bash
-cd packages/db
-DATABASE_URL="postgresql://flowforge:flowforge@localhost:5432/flowforge" npx prisma generate
-DATABASE_URL="postgresql://flowforge:flowforge@localhost:5432/flowforge" npx prisma db push
+pnpm db:generate
+pnpm db:push
 ```
 
-5. **Start services**
-
-API:
+5. **Start all services** (single command)
 ```bash
-cd apps/api
-DATABASE_URL="postgresql://flowforge:flowforge@localhost:5432/flowforge" pnpm dev
-```
-
-Worker (separate terminal):
-```bash
-cd apps/worker
-DATABASE_URL="postgresql://flowforge:flowforge@localhost:5432/flowforge" pnpm dev
-```
-
-Frontend (separate terminal):
-```bash
-cd apps/web
 pnpm dev
 ```
+
+This starts all services simultaneously via Turborepo:
+- API: http://localhost:3000
+- Frontend: http://localhost:3002
+- Realtime: ws://localhost:3001
 
 ## Making Changes
 

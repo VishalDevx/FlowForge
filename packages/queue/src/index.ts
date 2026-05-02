@@ -1,6 +1,6 @@
-import { Queue, Worker, FlowProducer } from 'bullmq';
+import { Queue } from 'bullmq';
 import redis from '@flowforge/redis';
-import { JobDataSchema, type JobData } from '@flowforge/contracts';
+import { type JobData } from '@flowforge/contracts';
 
 export const EXECUTION_QUEUE = 'execution';
 export const RETRY_QUEUE = 'retry';

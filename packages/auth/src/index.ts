@@ -1,13 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { createLogger } from '@flowforge/logger';
-import {
-  UserSchema,
-  RoleSchema,
-  type Role,
-  type UserCreateInput,
-  type UserLoginInput,
-} from '@flowforge/contracts';
+import { type Role } from '@flowforge/contracts';
 
 const logger = createLogger('@flowforge/auth');
 
@@ -38,12 +32,12 @@ export const verifyPassword = async (password: string, hash: string): Promise<bo
 };
 
 export const generateAccessToken = (payload: TokenPayload): string => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as string });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] });
 };
 
 export const generateRefreshToken = (payload: TokenPayload): string => {
   return jwt.sign({ ...payload, type: 'refresh' }, JWT_SECRET, {
-    expiresIn: REFRESH_TOKEN_EXPIRES_IN as string,
+    expiresIn: REFRESH_TOKEN_EXPIRES_IN as jwt.SignOptions['expiresIn'],
   });
 };
 

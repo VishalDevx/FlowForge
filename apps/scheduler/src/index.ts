@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import cron from 'node-cron';
 import { PrismaClient } from '@flowforge/db';
 import logger from '@flowforge/logger';

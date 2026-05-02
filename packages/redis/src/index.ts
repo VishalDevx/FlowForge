@@ -1,8 +1,10 @@
 import Redis from 'ioredis';
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-
-export const redis = new Redis(REDIS_URL, {
+export const redis = new Redis({
+  host: process.env.REDIS_HOST || 'redis-14623.c62.us-east-1-4.ec2.cloud.redislabs.com',
+  port: parseInt(process.env.REDIS_PORT || '14623'),
+  username: 'default',
+  password: process.env.REDIS_PASSWORD || '',
   maxRetriesPerRequest: 3,
   retryStrategy: (times) => Math.min(times * 50, 2000),
   lazyConnect: true,

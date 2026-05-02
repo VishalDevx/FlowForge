@@ -188,8 +188,6 @@ export const buildExecutionPlan = (
     throw new Error('Trigger node not found in workflow');
   }
   
-  const nodeMap = new Map(sortedIds.map((id, idx) => [id, idx]));
-  
   const plan: ExecutionPlan = [];
   for (const nodeId of sortedIds.slice(triggerIndex)) {
     const node = graph.get(nodeId)!;

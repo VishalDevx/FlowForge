@@ -1,6 +1,7 @@
 {
   "name": "flowforge",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "description": "Distributed workflow execution platform",
   "workspaces": [
@@ -10,7 +11,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "lint": "turbo lint",
+    "lint": "eslint .",
     "typecheck": "turbo typecheck",
     "db:generate": "turbo run db:generate",
     "db:push": "turbo run db:push",
@@ -19,13 +20,25 @@
     "clean": "turbo run clean"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^16.2.4",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
+    "eslint": "^9",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "tsx": "^4.19.2",
     "turbo": "^2.3.3",
     "typescript": "^5.6.3",
-    "tsx": "^4.19.2"
+    "typescript-eslint": "^8.59.1"
   },
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@9.15.0",
+  "dependencies": {
+    "@fastify/formbody": "^8.0.2",
+    "dotenv": "^17.4.2",
+    "pino-pretty": "^11.3.0"
+  }
 }
