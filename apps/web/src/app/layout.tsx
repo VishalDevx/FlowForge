@@ -1,9 +1,15 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'FlowForge - Workflow Automation Platform',
-  description: 'Build, deploy, and run automated workflows with ease',
+  title: {
+    default: 'FlowForge — Workflow Automation Platform',
+    template: '%s | FlowForge',
+  },
+  description: 'Build, deploy, and run automated workflows at scale. Visual editor, distributed execution, real-time monitoring.',
 };
 
 export default function RootLayout({
@@ -12,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-gray-50 min-h-screen">{children}</body>
+    <html lang="en" className="scroll-smooth">
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }

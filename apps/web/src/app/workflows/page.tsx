@@ -1,128 +1,186 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { DashboardLayout } from '../../components/layout/dashboard-layout';
+import { isAuthenticated } from '../../lib/auth';
+import { api } from '../../lib/api';
 
 interface Workflow {
   id: string;
   name: string;
   description?: string;
+  status: 'draft' | 'published' | 'archived';
   updatedAt: string;
 }
 
 export default function WorkflowsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    async function fetchWorkflows() {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        window.location.href = '/login';
-        return;
-      }
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
 
+    async function fetchWorkflows() {
       try {
-        const res = await fetch('/api/v1/workflows?workspaceId=demo', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data.success) {
-          setWorkflows(data.data?.workflows || []);
-        }
+        const wsId = searchParams.get('workspace');
+        const data = await api.get<Record<string, unknown>>(`/workflows${wsId ? `?workspaceId=${wsId}` : ''}`);
+        const wfs = (data as { workflows?: Workflow[] })?.workflows || [];
+        setWorkflows(wfs);
       } catch {
         setError('Failed to load workflows');
       } finally {
         setLoading(false);
       }
     }
-    fetchWorkflows();
-  }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
-  }
+    fetchWorkflows();
+  }, [router, searchParams]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      await api.post('/workflows', { name: newName, description: newDesc, workspaceId: searchParams.get('workspace') });
+      setShowCreateModal(false);
+      setNewName('');
+      setNewDesc('');
+
+      const data = await api.get<Record<string, unknown>>('/workflows');
+      setWorkflows((data as { workflows?: Workflow[] })?.workflows || []);
+      } catch {
+        // silently fail
+      } finally {
+      setCreating(false);
+    }
+  };
+
+  const statusBadge = (status: string) => {
+    const map: Record<string, { className: string; label: string }> = {
+      draft: { className: 'badge-muted', label: 'Draft' },
+      published: { className: 'badge-success', label: 'Published' },
+      archived: { className: 'badge-warning', label: 'Archived' },
+    };
+    const s = map[status] || map.draft;
+    return <span className={s.className}>{s.label}</span>;
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between">
-            <div className="flex items-center">
-              <Link href="/dashboard" className="text-xl font-bold text-primary-600">FlowForge</Link>
-              <div className="hidden sm:ml-8 sm:flex sm:space-x-6">
-                <Link href="/dashboard" className="border-transparent text-gray-500 hover:text-gray-700 px-1 pt-1 border-b-2 text-sm font-medium">
-                  Dashboard
-                </Link>
-                <Link href="/workflows" className="border-primary-600 text-gray-900 px-1 pt-1 border-b-2 text-sm font-medium">
-                  Workflows
-                </Link>
-              </div>
+    <DashboardLayout
+      title="Workflows"
+      description="Manage and build your automated workflows."
+      actions={
+        <button onClick={() => setShowCreateModal(true)} className="btn-primary">
+          <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          New Workflow
+        </button>
+      }
+    >
+      {error && (
+        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive mb-6">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card">
+              <div className="skeleton h-5 w-32 mb-2" />
+              <div className="skeleton h-4 w-48" />
             </div>
-          </div>
+          ))}
         </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Workflows</h1>
-          <Link href="/workflows/new" className="btn-primary">
+      ) : workflows.length === 0 ? (
+        <div className="card text-center py-16">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
+            <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold mb-1">No workflows yet</h3>
+          <p className="text-muted-foreground mb-6">Create your first workflow to automate your processes.</p>
+          <button onClick={() => setShowCreateModal(true)} className="btn-primary">
+            <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
             Create Workflow
-          </Link>
+          </button>
         </div>
-
-        {error && (
-          <div className="p-4 mb-4 text-sm text-red-600 bg-red-50 rounded">{error}</div>
-        )}
-
-        {workflows.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <h3 className="text-lg font-medium text-gray-900">No workflows yet</h3>
-            <p className="mt-2 text-sm text-gray-500">Create your first workflow to automate your processes.</p>
-            <Link href="/workflows/new" className="btn-primary mt-4 inline-block">
-              Create Workflow
-            </Link>
-          </div>
-        ) : (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+      ) : (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 border-b border-border">
+              <tr>
+                <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Name</th>
+                <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
+                <th className="text-left py-3 px-4 font-semibold text-muted-foreground hidden sm:table-cell">Description</th>
+                <th className="text-left py-3 px-4 font-semibold text-muted-foreground hidden md:table-cell">Updated</th>
+                <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {workflows.map((workflow) => (
+                <tr key={workflow.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                  <td className="py-3 px-4">
+                    <Link href={`/workflows/${workflow.id}`} className="font-medium text-primary hover:underline">
+                      {workflow.name}
+                    </Link>
+                  </td>
+                  <td className="py-3 px-4">{statusBadge(workflow.status)}</td>
+                  <td className="py-3 px-4 text-muted-foreground hidden sm:table-cell">{workflow.description || '—'}</td>
+                  <td className="py-3 px-4 text-muted-foreground hidden md:table-cell">
+                    {new Date(workflow.updatedAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <Link href={`/workflows/${workflow.id}`} className="text-primary hover:underline text-sm">
+                      Edit
+                    </Link>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {workflows.map((workflow) => (
-                  <tr key={workflow.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Link href={`/workflows/${workflow.id}`} className="text-primary-600 hover:text-primary-900 font-medium">
-                        {workflow.name}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{workflow.description || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(workflow.updatedAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <Link href={`/workflows/${workflow.id}`} className="text-primary-600 hover:text-primary-900">
-                        Edit
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowCreateModal(false)}>
+          <div className="card w-full max-w-md mx-4 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <h3 className="heading-sm mb-1">Create Workflow</h3>
+            <p className="text-sm text-muted-foreground mb-6">Give your workflow a name and optional description.</p>
+
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Name</label>
+                <input type="text" required value={newName} onChange={(e) => setNewName(e.target.value)} className="input" placeholder="Email Notification Pipeline" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Description <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} className="input resize-none" rows={3} placeholder="Sends an email when a webhook is received..." />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowCreateModal(false)} className="btn-secondary flex-1">Cancel</button>
+                <button type="submit" disabled={creating} className="btn-primary flex-1">{creating ? 'Creating...' : 'Create'}</button>
+              </div>
+            </form>
           </div>
-        )}
-      </main>
-    </div>
+        </div>
+      )}
+    </DashboardLayout>
   );
 }
