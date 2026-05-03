@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { Worker, Job } from 'bullmq';
-import { PrismaClient } from '@flowforge/db';
+import { db as prisma } from '@flowforge/db';
 import logger from '@flowforge/logger';
 import { executeNode } from '@flowforge/nodes';
 import {
@@ -13,8 +13,6 @@ import {
   nodeExecutionsTotal,
   activeWorkers,
 } from '@flowforge/observability';
-
-const prisma = new PrismaClient();
 const WORKER_ID = `worker-${process.env.HOSTNAME || process.pid}`;
 
 const processJob = async (job: Job) => {

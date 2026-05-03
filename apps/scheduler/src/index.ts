@@ -1,10 +1,11 @@
 import 'dotenv/config';
 import cron from 'node-cron';
-import { PrismaClient } from '@flowforge/db';
+import { db as prisma } from '@flowforge/db';
+
 import logger from '@flowforge/logger';
 import { createExecutionJob, createScheduledJob } from '@flowforge/queue';
 
-const prisma = new PrismaClient();
+
 
 const generateIdempotencyKey = () => {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
