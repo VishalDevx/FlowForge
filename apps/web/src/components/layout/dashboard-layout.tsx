@@ -47,7 +47,7 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ className, currentPath }: DashboardSidebarProps) {
   return (
-    <aside className={cn('flex flex-col h-full bg-sidebar test-white', className)}>
+    <aside className={cn('flex flex-col h-full bg-sidebar text-white', className)}>
       <div className="flex h-16 items-center gap-2 px-6 border-b border-white/10">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
           <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -125,12 +125,12 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title, description, actions }: DashboardLayoutProps) {
   return (
-    <div className="flex h-screen bg-background">
-      <div className="w-64 flex-shrink-0">
+    <div className="flex h-screen bg-muted/30">
+      <div className="w-64 flex-shrink-0 border-r border-border">
         <DashboardSidebar />
       </div>
       <main className="flex-1 overflow-auto">
-        <div className="p-8">
+        <div className="p-8 max-w-7xl">
           {title && (
             <DashboardHeader title={title} description={description}>
               {actions}

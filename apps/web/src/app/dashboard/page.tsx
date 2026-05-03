@@ -22,11 +22,20 @@ interface Stats {
   activeTriggers: number;
 }
 
+interface Execution {
+  id: string;
+  workflowName?: string;
+  status: string;
+  startedAt?: string;
+  duration?: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { setUser } = useAuth();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [stats] = useState<Stats>({ workflows: 12, executions: 1847, successRate: 99.2, activeTriggers: 5 });
+  const [stats, setStats] = useState<Stats>({ workflows: 0, executions: 0, successRate: 0, activeTriggers: 0 });
+  const [recentExecutions, setRecentExecutions] = useState<Execution[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
@@ -59,11 +68,35 @@ export default function DashboardPage() {
 
     async function loadData() {
       try {
-        const wsData = await api.get<Record<string, unknown>>('/workspaces');
+        const [wsData, execData] = await Promise.all([
+          api.get<Record<string, unknown>>('/workspaces'),
+          api.get<Record<string, unknown>>('/executions?limit=4'),
+        ]);
+
         const ws = (wsData as { workspaces?: Workspace[] })?.workspaces || [];
         setWorkspaces(ws);
+
+        const execs = (execData as { executions?: Execution[] })?.executions || [];
+        const totalExecutions = execs.length;
+        const successful = execs.filter((e) => e.status === 'completed').length;
+        const successRate = totalExecutions > 0 ? (successful / totalExecutions) * 100 : 0;
+
+        setStats({
+          workflows: ws.length,
+          executions: totalExecutions,
+          successRate: Math.round(successRate * 10) / 10,
+          activeTriggers: 0,
+        });
+
+        setRecentExecutions(execs.map((e) => ({
+          id: e.id,
+          workflowName: e.workflowName || 'Unknown Workflow',
+          status: e.status || 'unknown',
+          startedAt: e.startedAt || 'Unknown',
+          duration: e.duration || '—',
+        })));
       } catch {
-        // silently fail — workspaces will be empty
+        // silently fail
       } finally {
         setLoading(false);
       }
@@ -77,7 +110,10 @@ export default function DashboardPage() {
     setCreating(true);
 
     try {
-      await api.post('/workspaces', { name: newWorkspaceName, slug: newWorkspaceSlug || newWorkspaceName.toLowerCase().replace(/\s+/g, '-') });
+      await api.post('/workspaces', {
+        name: newWorkspaceName,
+        slug: newWorkspaceSlug || newWorkspaceName.toLowerCase().replace(/\s+/g, '-'),
+      });
       setShowCreateModal(false);
       setNewWorkspaceName('');
       setNewWorkspaceSlug('');
@@ -108,7 +144,7 @@ export default function DashboardPage() {
   return (
     <DashboardLayout
       title="Dashboard"
-      description="Welcome back, here&apos;s an overview of your workflows."
+      description="Welcome back, here's an overview of your workflows."
       actions={
         <button onClick={() => setShowCreateModal(true)} className="btn-primary">
           <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -119,27 +155,61 @@ export default function DashboardPage() {
       }
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        {[
-          { label: 'Total Workflows', value: stats.workflows.toString(), icon: 'M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244', change: '+2 this week' },
-          { label: 'Executions', value: stats.executions.toLocaleString(), icon: 'M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z', change: '+12% from last month' },
-          { label: 'Success Rate', value: `${stats.successRate}%`, icon: 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z', change: 'Excellent' },
-          { label: 'Active Triggers', value: stats.activeTriggers.toString(), icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z', change: '5 webhooks active' },
-        ].map((stat) => (
-          <div key={stat.label} className="card card-hover">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="mt-1 text-3xl font-bold">{stat.value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{stat.change}</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d={stat.icon} />
-                </svg>
-              </div>
+        <div className="card card-hover">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Workflows</p>
+              <p className="mt-1 text-3xl font-bold">{stats.workflows}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+              <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+              </svg>
             </div>
           </div>
-        ))}
+        </div>
+
+        <div className="card card-hover">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Executions</p>
+              <p className="mt-1 text-3xl font-bold">{stats.executions.toLocaleString()}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+              <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="card card-hover">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Success Rate</p>
+              <p className="mt-1 text-3xl font-bold">{stats.successRate}%</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
+              <svg className="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="card card-hover">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Active Triggers</p>
+              <p className="mt-1 text-3xl font-bold">{stats.activeTriggers}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+              <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mb-8">
@@ -199,30 +269,29 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
           <h3 className="heading-sm mb-4">Recent Executions</h3>
-          <div className="space-y-3">
-            {[
-              { name: 'Email Notification', status: 'completed', time: '2 min ago', duration: '1.2s' },
-              { name: 'Data Sync Pipeline', status: 'running', time: '5 min ago', duration: '-' },
-              { name: 'Webhook Handler', status: 'failed', time: '12 min ago', duration: '0.3s' },
-              { name: 'Daily Report', status: 'completed', time: '1 hour ago', duration: '4.5s' },
-            ].map((exec) => (
-              <div key={exec.name} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className={`h-2 w-2 rounded-full ${
-                    exec.status === 'completed' ? 'bg-success' :
-                    exec.status === 'running' ? 'bg-primary animate-pulse' :
-                    exec.status === 'failed' ? 'bg-destructive' :
-                    'bg-muted'
-                  }`} />
-                  <span className="text-sm font-medium">{exec.name}</span>
+          {recentExecutions.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">No executions yet</p>
+          ) : (
+            <div className="space-y-3">
+              {recentExecutions.map((exec) => (
+                <div key={exec.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-2 w-2 rounded-full ${
+                      exec.status === 'completed' ? 'bg-success' :
+                      exec.status === 'running' ? 'bg-primary animate-pulse' :
+                      exec.status === 'failed' ? 'bg-destructive' :
+                      'bg-muted'
+                    }`} />
+                    <span className="text-sm font-medium">{exec.workflowName}</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>{exec.duration}</span>
+                    <span>{exec.startedAt}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{exec.duration}</span>
-                  <span>{exec.time}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="card">

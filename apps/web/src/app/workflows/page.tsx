@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { DashboardLayout } from '../../components/layout/dashboard-layout';
@@ -15,10 +15,18 @@ interface Workflow {
   updatedAt: string;
 }
 
-export default function WorkflowsPage() {
+interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+function WorkflowsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -32,32 +40,57 @@ export default function WorkflowsPage() {
       return;
     }
 
-    async function fetchWorkflows() {
+    async function loadData() {
       try {
-        const wsId = searchParams.get('workspace');
-        const data = await api.get<Record<string, unknown>>(`/workflows${wsId ? `?workspaceId=${wsId}` : ''}`);
-        const wfs = (data as { workflows?: Workflow[] })?.workflows || [];
-        setWorkflows(wfs);
+        const wsData = await api.get<Record<string, unknown>>('/workspaces');
+        const ws = (wsData as { workspaces?: Workspace[] })?.workspaces || [];
+        setWorkspaces(ws);
+
+        const urlWsId = searchParams.get('workspace');
+        const wsId = urlWsId || ws[0]?.id || '';
+        setSelectedWorkspace(wsId);
+
+        if (wsId) {
+          const data = await api.get<Record<string, unknown>>(`/workflows?workspaceId=${wsId}`);
+          const wfs = (data as { workflows?: Workflow[] })?.workflows || [];
+          setWorkflows(wfs);
+        }
       } catch {
-        setError('Failed to load workflows');
+        setError('Failed to load data');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchWorkflows();
+    loadData();
   }, [router, searchParams]);
+
+  const handleWorkspaceChange = async (wsId: string) => {
+    setSelectedWorkspace(wsId);
+    router.push(`/workflows?workspace=${wsId}`);
+    if (wsId) {
+      try {
+        const data = await api.get<Record<string, unknown>>(`/workflows?workspaceId=${wsId}`);
+        const wfs = (data as { workflows?: Workflow[] })?.workflows || [];
+        setWorkflows(wfs);
+      } catch {
+        setError('Failed to load workflows');
+      }
+    } else {
+      setWorkflows([]);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
     try {
-      await api.post('/workflows', { name: newName, description: newDesc, workspaceId: searchParams.get('workspace') });
+      await api.post('/workflows', { name: newName, description: newDesc, workspaceId: selectedWorkspace });
       setShowCreateModal(false);
       setNewName('');
       setNewDesc('');
 
-      const data = await api.get<Record<string, unknown>>('/workflows');
+      const data = await api.get<Record<string, unknown>>(`/workflows?workspaceId=${selectedWorkspace}`);
       setWorkflows((data as { workflows?: Workflow[] })?.workflows || []);
       } catch {
         // silently fail
@@ -81,12 +114,30 @@ export default function WorkflowsPage() {
       title="Workflows"
       description="Manage and build your automated workflows."
       actions={
-        <button onClick={() => setShowCreateModal(true)} className="btn-primary">
-          <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          New Workflow
-        </button>
+        <div className="flex items-center gap-3">
+          {workspaces.length > 0 && (
+            <select
+              value={selectedWorkspace}
+              onChange={(e) => handleWorkspaceChange(e.target.value)}
+              className="input py-2 pr-8"
+            >
+              <option value="">Select workspace...</option>
+              {workspaces.map((ws) => (
+                <option key={ws.id} value={ws.id}>{ws.name}</option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-primary"
+            disabled={!selectedWorkspace}
+          >
+            <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            New Workflow
+          </button>
+        </div>
       }
     >
       {error && (
@@ -182,5 +233,13 @@ export default function WorkflowsPage() {
         </div>
       )}
     </DashboardLayout>
+  );
+}
+
+export default function WorkflowsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <WorkflowsContent />
+    </Suspense>
   );
 }

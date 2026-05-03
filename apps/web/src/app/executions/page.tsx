@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '../../components/layout/dashboard-layout';
 import { isAuthenticated } from '../../lib/auth';
+import { api } from '../../lib/api';
 
 interface Execution {
   id: string;
@@ -14,29 +15,30 @@ interface Execution {
   nodes: number;
 }
 
-const mockExecutions: Execution[] = [
-  { id: '1', workflowName: 'Email Notification Pipeline', status: 'completed', startedAt: '2 min ago', duration: '1.2s', nodes: 4 },
-  { id: '2', workflowName: 'Data Sync — Daily', status: 'running', startedAt: '5 min ago', duration: '—', nodes: 8 },
-  { id: '3', workflowName: 'Webhook → Slack Alert', status: 'failed', startedAt: '12 min ago', duration: '0.3s', nodes: 2 },
-  { id: '4', workflowName: 'User Onboarding Flow', status: 'completed', startedAt: '1 hour ago', duration: '4.5s', nodes: 12 },
-  { id: '5', workflowName: 'Report Generator', status: 'completed', startedAt: '3 hours ago', duration: '12.1s', nodes: 6 },
-  { id: '6', workflowName: 'API Health Check', status: 'cancelled', startedAt: '5 hours ago', duration: '—', nodes: 3 },
-  { id: '7', workflowName: 'Data Sync — Daily', status: 'completed', startedAt: '24 hours ago', duration: '8.7s', nodes: 8 },
-  { id: '8', workflowName: 'Email Notification Pipeline', status: 'completed', startedAt: '24 hours ago', duration: '1.1s', nodes: 4 },
-];
-
 export default function ExecutionsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [executions] = useState<Execution[]>(mockExecutions);
+  const [executions, setExecutions] = useState<Execution[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push('/login');
       return;
     }
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
+
+    async function loadExecutions() {
+      try {
+        const data = await api.get<Record<string, unknown>>('/executions');
+        const execs = (data as { executions?: Execution[] })?.executions || [];
+        setExecutions(execs);
+      } catch {
+        // Failed to load executions
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadExecutions();
   }, [router]);
 
   const statusBadge = (status: string) => {

@@ -187,16 +187,11 @@ export default function PricingPage() {
     // Razorpay integration placeholder
     // Replace this with your actual Razorpay checkout flow
     try {
-      const plan = plans.find((p) => p.id === planId);
-      if (!plan) return;
-
-      const amount = annual ? plan.annualPrice * 12 : plan.monthlyPrice;
-
       // TODO: Create order on your backend
       // const response = await fetch('/api/create-order', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ planId, amount, billingCycle: annual ? 'annual' : 'monthly' }),
+      //   body: JSON.stringify({ planId, billingCycle: annual ? 'annual' : 'monthly' }),
       // });
       // const order = await response.json();
 
@@ -205,7 +200,7 @@ export default function PricingPage() {
       //   amount: order.amount,
       //   currency: 'INR',
       //   name: 'FlowForge',
-      //   description: `${plan.name} Plan - ${annual ? 'Annual' : 'Monthly'} Subscription`,
+      //   description: `Plan - ${annual ? 'Annual' : 'Monthly'} Subscription`,
       //   order_id: order.id,
       //   handler: async (response: Record<string, string>) => {
       //     await fetch('/api/verify-payment', {
@@ -230,7 +225,7 @@ export default function PricingPage() {
       // const razorpay = new (window as Record<string, unknown>).Razorpay(options);
       // razorpay.open();
 
-      console.log(`Subscribe to ${planId}: ₹${amount} (${annual ? 'annual' : 'monthly'})`);
+      // Subscription handling would go here
     } catch {
       // Payment failed — handle gracefully
     } finally {

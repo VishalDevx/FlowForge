@@ -24,7 +24,9 @@ export async function DELETE(request: NextRequest) {
 
 async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const url = `${API_URL}${pathname}${search}`;
+  // Remove /api prefix since API_URL already includes /api/v1
+  const path = pathname.replace(/^\/api/, '');
+  const url = `${API_URL}${path}${search}`;
 
   const headers = new Headers(request.headers);
   headers.delete('host');
