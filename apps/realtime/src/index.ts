@@ -1,11 +1,10 @@
 import 'dotenv/config';
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
-import { PrismaClient } from '@flowforge/db';
+import { db } from '@flowforge/db';
 import logger from '@flowforge/logger';
 import { websocketConnections } from '@flowforge/observability';
 
-const prisma = new PrismaClient();
 const PORT = parseInt(process.env.REALTIME_PORT || '3001');
 
 const startRealtime = async () => {
@@ -14,7 +13,7 @@ const startRealtime = async () => {
     cors: { origin: '*' },
   });
 
-  await prisma.$connect();
+  await db.$connect();
 
   const executionRooms = new Map<string, Set<string>>();
 
@@ -53,9 +52,9 @@ const startRealtime = async () => {
   });
 
   const shutdown = async () => {
-    logger.info('Shutting down realtime server...');
-    await io.close();
-    await prisma.$disconnect();
+     logger.info('Shutting down realtime server...');
+     await io.close();
+     await db.$disconnect();
     process.exit(0);
   };
 

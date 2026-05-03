@@ -1,0 +1,17 @@
+{
+  "name": "@flowforge/workspace",
+  "version": "0.1.0",
+  "main": "src/workspace.service.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@flowforge/db": "workspace:*",
+    "@prisma/client": "5.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

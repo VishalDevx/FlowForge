@@ -25,7 +25,7 @@ export const workspaceRoutes = async (fastify: FastifyInstance) => {
       include: { workspace: true },
     });
 
-    return reply.status(200).send({ success: true, data: { workspaces: members.map((m) => m.workspace) } });
+    return reply.status(200).send({ success: true, data: { workspaces: members.map((m: any) => m.workspace) } });
   });
 
   fastify.get('/:id', async (request: FastifyRequest, reply: FastifyReply) => {

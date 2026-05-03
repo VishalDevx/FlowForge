@@ -2,7 +2,7 @@ import { prisma } from '../db.js';
 import type { CreateWorkspaceInput, UpdateWorkspaceInput, PaginationQuery } from '../dtos/index.js';
 import { generateSlug, generateId } from '../utils/index.js';
 
-export const workspaceService = {
+export const workspaceService: Record<string, Function> = {
   async create(input: CreateWorkspaceInput, userId: string) {
     const slug = input.slug || generateSlug(input.name);
     

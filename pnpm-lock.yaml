@@ -289,10 +289,10 @@ importers:
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
-      zod:
-        specifier: ^3.23.8
-        version: 3.25.76
     devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.17
       prisma:
         specifier: ^5.22.0
         version: 5.22.0
@@ -399,6 +399,22 @@ importers:
     devDependencies:
       typescript:
         specifier: ^5.6.3
+        version: 5.9.3
+
+  packages/workspace:
+    dependencies:
+      '@flowforge/db':
+        specifier: workspace:*
+        version: link:../db
+      '@prisma/client':
+        specifier: 5.22.0
+        version: 5.22.0(prisma@5.22.0)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.17
+      typescript:
+        specifier: ^5.7.0
         version: 5.9.3
 
 packages:

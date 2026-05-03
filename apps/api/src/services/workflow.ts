@@ -1,7 +1,7 @@
 import { prisma } from '../db.js';
 import type { CreateWorkflowInput, UpdateWorkflowInput, WorkflowVersionInput, CreateExecutionInput, PaginationQuery } from '../dtos/index.js';
 
-export const workflowService = {
+export const workflowService: Record<string, Function> = {
   async create(input: CreateWorkflowInput, userId: string) {
     const workspace = await prisma.workspace.findUnique({
       where: { id: input.workspaceId },
@@ -156,7 +156,7 @@ export const workflowService = {
   },
 };
 
-export const executionService = {
+export const executionService: Record<string, Function> = {
   async create(input: CreateExecutionInput, userId: string) {
     const workflow = await prisma.workflow.findUnique({
       where: { id: input.workflowId },
