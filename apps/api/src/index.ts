@@ -3,12 +3,12 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import pino from 'pino';
-import { prisma } from './db.js';
-import { authRoutes } from './controllers/auth.js';
-import { workspaceRoutes } from './routes/workspace.js';
-import { workflowRoutes } from './routes/workflow.js';
-import { executionRoutes } from './routes/execution.js';
-import { authenticate } from './middlewares/auth.js';
+import { db } from '@flowforge/db';
+import { authRoutes } from './routes/auth';
+import { workspaceRoutes } from './routes/workspace';
+import { workflowRoutes } from './routes/workflow';
+import { executionRoutes } from './routes/execution';
+import { authenticate } from './middlewares/auth';
 import { config } from './config/index.js';
 import { errorHandler } from './middlewares/error.js';
 
@@ -55,7 +55,7 @@ const start = async () => {
     fastify.register(executionRoutes, { prefix: '/executions' });
   }, { prefix: '/api/v1' });
 
-  await prisma.$connect();
+  await db.$connect();
   logger.info({ database: config.databaseUrl.slice(0, 30) + '...' }, 'Connected to database');
 
   await server.listen({ port: config.port, host: config.host });

@@ -1,7 +1,9 @@
 import { db } from '@flowforge/db';
 import { Prisma } from '@flowforge/db';
 import { Role, TriggerType, ExecutionStatus, AuditAction } from '@prisma/client';
+import { Buffer } from 'buffer';
 import crypto from 'crypto';
+import process from 'process';
 
 function encrypt(value: string): string {
   if (!process.env.ENCRYPTION_KEY) return value;

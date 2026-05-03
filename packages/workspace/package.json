@@ -8,10 +8,11 @@
   },
   "dependencies": {
     "@flowforge/db": "workspace:*",
-    "@prisma/client": "5.22.0"
+    "@prisma/client": "5.22.0",
+    "crypto": "^1.0.1"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.19.17",
     "typescript": "^5.7.0"
   }
 }

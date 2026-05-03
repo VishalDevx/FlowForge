@@ -17,6 +17,7 @@
     "@flowforge/queue": "workspace:*",
     "@flowforge/redis": "workspace:*",
     "@flowforge/workflow-engine": "workspace:*",
+    "@prisma/client": "5.22.0",
     "bullmq": "^5.28.2"
   },
   "devDependencies": {

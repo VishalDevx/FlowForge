@@ -13,6 +13,7 @@
     "@flowforge/db": "workspace:*",
     "@flowforge/logger": "workspace:*",
     "@flowforge/queue": "workspace:*",
+    "@prisma/client": "5.22.0",
     "node-cron": "^1.0.9"
   },
   "devDependencies": {

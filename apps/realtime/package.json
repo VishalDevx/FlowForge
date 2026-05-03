@@ -12,6 +12,7 @@
     "@flowforge/db": "workspace:*",
     "@flowforge/logger": "workspace:*",
     "@flowforge/observability": "workspace:*",
+    "@prisma/client": "5.22.0",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
