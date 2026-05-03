@@ -47,7 +47,7 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ className, currentPath }: DashboardSidebarProps) {
   return (
-    <aside className={cn('flex flex-col h-full bg-sidebar', className)}>
+    <aside className={cn('flex flex-col h-full bg-sidebar test-white', className)}>
       <div className="flex h-16 items-center gap-2 px-6 border-b border-white/10">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
           <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -68,7 +68,7 @@ export function DashboardSidebar({ className, currentPath }: DashboardSidebarPro
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-white/10 text-white'
-                  : 'text-sidebar-muted hover:bg-white/5 hover:text-white'
+                  : 'text-sidebar-muted hover:bg-white/5 hover:text-white text-gray-300'
               )}
             >
               {item.icon}
