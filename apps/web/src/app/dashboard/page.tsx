@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { DashboardLayout } from '../../components/layout/dashboard-layout';
-import { isAuthenticated } from '../../lib/auth';
+import { isAuthenticated, clearTokens } from '../../lib/auth';
 import { useAuth } from '../../stores/auth';
 import { api } from '../../lib/api';
 
@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Stats>({ workflows: 0, executions: 0, successRate: 0, activeTriggers: 0 });
   const [recentExecutions, setRecentExecutions] = useState<Execution[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [newWorkspaceSlug, setNewWorkspaceSlug] = useState('');
@@ -53,10 +54,11 @@ export default function DashboardPage() {
       try {
         const data = await api.get<{ id: string; email: string; name: string }>('/auth/me');
         setUser(data as { id: string; email: string; name: string });
-      } catch {
-        router.push('/login');
-      } finally {
         setUserLoaded(true);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        clearTokens();
+        router.push('/login');
       }
     }
 
@@ -95,8 +97,8 @@ export default function DashboardPage() {
           startedAt: e.startedAt || 'Unknown',
           duration: e.duration || '—',
         })));
-      } catch {
-        // silently fail
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
       } finally {
         setLoading(false);
       }
@@ -136,6 +138,32 @@ export default function DashboardPage() {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
           <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 max-w-md text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <svg className="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+          </div>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <button
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              setUserLoaded(false);
+              window.location.reload();
+            }}
+            className="btn-primary"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

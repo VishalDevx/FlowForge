@@ -321,11 +321,78 @@ enum Role {
 }
 
 enum TriggerType {
-  webhook
-  cron
+  # Manual triggers
   manual
-  event
+  manual_json
+  manual_form
+
+  # Webhook triggers
+  webhook
+  webhook_get
+  webhook_custom_path
+  webhook_multi_url
+  
+  # Cron/Schedule triggers
+  cron
   scheduled
+  interval
+  one_shot
+  business_hours
+  
+  # Event triggers
+  event
+  queue_consumer
+  workflow_completed
+  workflow_failed
+  sub_workflow
+  file_arrival
+  email_inbound
+  rss_poller
+  polling_url
+  db_trigger
+  mqtt_message
+  kafka_subject
+  nats_subject
+  git_webhook
+  cicd_webhook
+  payment_webhook
+  slack_command
+  discord_interaction
+  calendar_event
+  form_endpoint
+  
+  # Rate limiting & throttling
+  rate_limit
+  throttle
+  debounce
+  cooldown
+  priority_queue
+  
+  # Transform & routing
+  trigger_transform
+  composite_and
+  composite_or
+  composite_first_winner
+  stagger
+  
+  # Business triggers
+  user_segment
+  consent_change
+  heartbeat
+  synthetic_check
+  certificate_expiry
+  dns_change
+  inventory_threshold
+  price_threshold
+  license_renewal
+  backup_job
+  deploy_hook
+  data_catalog
+  model_registry
+  ab_test
+  cost_threshold
+  queue_depth
+  sla_timer
 }
 
 enum NodeType {
