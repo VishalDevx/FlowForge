@@ -1,0 +1,31 @@
+app = "flowforge"
+
+[build]
+  dockerfile = "infra/docker/Dockerfile.api"
+
+[env]
+  NODE_ENV = "production"
+
+[[services]]
+  port = 3000
+  internal_port = 3000
+  protocol = "tcp"
+
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.tcp_checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    restart_limit = 3
