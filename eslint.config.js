@@ -61,6 +61,8 @@ export default tseslint.config(
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
       'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+      '@typescript-eslint/no-empty-object-type': 'warn',
     },
     settings: {
       react: { version: 'detect' },
