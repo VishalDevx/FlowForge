@@ -320,26 +320,26 @@ enum Role {
   viewer
 }
 
+// Manual triggers
 enum TriggerType {
-  # Manual triggers
   manual
   manual_json
   manual_form
 
-  # Webhook triggers
+  // Webhook triggers
   webhook
   webhook_get
   webhook_custom_path
   webhook_multi_url
   
-  # Cron/Schedule triggers
+  // Cron/Schedule triggers
   cron
   scheduled
   interval
   one_shot
   business_hours
   
-  # Event triggers
+  // Event triggers
   event
   queue_consumer
   workflow_completed
@@ -361,21 +361,21 @@ enum TriggerType {
   calendar_event
   form_endpoint
   
-  # Rate limiting & throttling
+  // Rate limiting & throttling
   rate_limit
   throttle
   debounce
   cooldown
   priority_queue
   
-  # Transform & routing
+  // Transform & routing
   trigger_transform
   composite_and
   composite_or
   composite_first_winner
   stagger
   
-  # Business triggers
+  // Business triggers
   user_segment
   consent_change
   heartbeat
