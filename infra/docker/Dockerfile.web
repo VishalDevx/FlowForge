@@ -1,18 +1,26 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 WORKDIR /app
-
-RUN corepack enable
-
-COPY package.json pnpm-lock.yaml ./
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
-
+COPY packages/*/package.json ./packages/
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+RUN pnpm --filter @flowforge/web build
+RUN pnpm deploy --filter @flowforge/web /tmp/deploy
 
-WORKDIR /app/apps/web
+FROM node:20-alpine AS runner
+RUN addgroup --system --gid 1001 flowforge && adduser --system --uid 1001 flowforge
 
+WORKDIR /app
+COPY --from=builder /tmp/deploy/node_modules ./node_modules
+COPY --from=builder /tmp/deploy/.next ./.next
+COPY --from=builder /tmp/deploy/package.json ./
+COPY --from=builder /tmp/deploy/public ./public
+
+USER flowforge
 EXPOSE 3002
 
-CMD ["npm", "run", "dev"]
+CMD ["node_modules/.bin/next", "start", "-p", "3002"]
