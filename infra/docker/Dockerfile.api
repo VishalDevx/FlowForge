@@ -1,21 +1,28 @@
-# Backend API Service
-
-FROM node:20-alpine
+FROM node:20-alpine AS builder
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 WORKDIR /app
-
-RUN corepack enable
-
-COPY package.json pnpm-lock.yaml ./
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/*/package.json ./packages/
-
-RUN pnpm install --frozen-lockfile --filter=@flowforge/api
+RUN pnpm install --frozen-lockfile
 
 COPY . .
+RUN pnpm --filter @flowforge/api build
+RUN pnpm deploy --filter @flowforge/api /tmp/deploy
 
-WORKDIR /app/apps/api
+FROM node:20-alpine AS runner
+RUN addgroup --system --gid 1001 flowforge && adduser --system --uid 1001 flowforge
 
+WORKDIR /app
+COPY --from=builder /tmp/deploy/node_modules ./node_modules
+COPY --from=builder /tmp/deploy/dist ./dist
+COPY --from=builder /tmp/deploy/package.json ./
+
+USER flowforge
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+CMD ["node", "dist/index.js"]
