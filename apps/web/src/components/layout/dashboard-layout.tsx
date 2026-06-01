@@ -1,5 +1,18 @@
+/**
+ * Dashboard layout with sidebar navigation and header.
+ * Provides the main authenticated app shell with nav, sign-out, and page content.
+ *
+ * @example
+ * ```tsx
+ * <DashboardLayout title="Dashboard" description="Overview" actions={<Button>New</Button>}>
+ *   <p>Content</p>
+ * </DashboardLayout>
+ * ```
+ */
+
 import Link from 'next/link';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const sidebarItems = [
   {
@@ -79,20 +92,21 @@ export function DashboardSidebar({ className, currentPath }: DashboardSidebarPro
       </nav>
 
       <div className="px-3 py-4 border-t border-white/10">
-        <button
+        <Button
+          variant="ghost"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-muted hover:bg-white/5 hover:text-white transition-colors h-auto"
           onClick={() => {
             localStorage.removeItem('ff_access_token');
             localStorage.removeItem('ff_refresh_token');
             document.cookie = 'ff_session=; path=/; max-age=0';
             window.location.href = '/login';
           }}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-muted hover:bg-white/5 hover:text-white transition-colors"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3" />
           </svg>
           Sign out
-        </button>
+        </Button>
       </div>
     </aside>
   );
