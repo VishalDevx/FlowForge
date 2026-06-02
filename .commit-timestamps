@@ -16,3 +16,4 @@
 # 2026-06-09T16:40:42.844323 - chore: setup dockerignore
 # 2026-06-09T11:40:42.844323 - chore: add docker compose override
 # 2026-06-09T00:04:42.844323 - chore: update Dockerfile stages
+# 2026-06-02T11:18:53.844323 - chore: configure CI triggers
