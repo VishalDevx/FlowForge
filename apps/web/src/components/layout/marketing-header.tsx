@@ -1,5 +1,16 @@
+/**
+ * Marketing site header with navigation, sign in, and CTA button.
+ * Used on landing, pricing, and docs pages.
+ *
+ * @example
+ * ```tsx
+ * <MarketingHeader />
+ * ```
+ */
+
 import Link from 'next/link';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface NavLink {
   label: string;
@@ -40,7 +51,7 @@ interface MarketingHeaderProps {
 export function MarketingHeader({ className }: MarketingHeaderProps) {
   return (
     <header className={cn('sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl', className)}>
-      <div className="container flex h-16 items-center">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center">
         <Link href="/" className="flex items-center gap-2 mr-8">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
             <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -56,9 +67,9 @@ export function MarketingHeader({ className }: MarketingHeaderProps) {
           <Link href="/login" className="hidden sm:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Sign in
           </Link>
-          <Link href="/register" className="btn-primary btn-sm">
-            Get Started
-          </Link>
+          <Button asChild size="sm">
+            <Link href="/register">Get Started</Link>
+          </Button>
         </div>
       </div>
     </header>
