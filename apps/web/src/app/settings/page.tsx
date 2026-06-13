@@ -1,9 +1,22 @@
+/**
+ * Settings page — account settings, password change, and danger zone.
+ *
+ * @example
+ * ```tsx
+ * <SettingsPage />
+ * ```
+ */
+
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '../../components/layout/dashboard-layout';
 import { isAuthenticated } from '../../lib/auth';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -18,47 +31,55 @@ export default function SettingsPage() {
   return (
     <DashboardLayout title="Settings" description="Manage your account, workspace secrets, and preferences.">
       <div className="max-w-2xl space-y-6">
-        <div className="card">
-          <h3 className="heading-sm mb-4">Account Settings</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Display Name</label>
-              <input className="input" placeholder="Your name" />
+        <Card>
+          <CardHeader>
+            <CardTitle>Account Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="display-name">Display Name</Label>
+              <Input id="display-name" placeholder="Your name" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Email</label>
-              <input className="input" type="email" placeholder="you@example.com" disabled />
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="you@example.com" disabled />
             </div>
-            <button className="btn-primary">Save Changes</button>
-          </div>
-        </div>
+            <Button>Save Changes</Button>
+          </CardContent>
+        </Card>
 
-        <div className="card">
-          <h3 className="heading-sm mb-4">Change Password</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Current Password</label>
-              <input className="input" type="password" placeholder="Enter current password" />
+        <Card>
+          <CardHeader>
+            <CardTitle>Change Password</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Current Password</Label>
+              <Input id="current-password" type="password" placeholder="Enter current password" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1.5">New Password</label>
-              <input className="input" type="password" placeholder="Enter new password" />
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input id="new-password" type="password" placeholder="Enter new password" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Confirm Password</label>
-              <input className="input" type="password" placeholder="Confirm new password" />
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input id="confirm-password" type="password" placeholder="Confirm new password" />
             </div>
-            <button className="btn-primary">Update Password</button>
-          </div>
-        </div>
+            <Button>Update Password</Button>
+          </CardContent>
+        </Card>
 
-        <div className="card border-destructive/20">
-          <h3 className="heading-sm mb-2 text-destructive">Danger Zone</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Once you delete your account, there is no going back. Please be certain.
-          </p>
-          <button className="btn-destructive">Delete Account</button>
-        </div>
+        <Card className="border-destructive/20">
+          <CardHeader>
+            <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            <CardDescription>
+              Once you delete your account, there is no going back. Please be certain.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="destructive">Delete Account</Button>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
