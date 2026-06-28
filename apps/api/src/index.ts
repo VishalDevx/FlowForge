@@ -8,6 +8,8 @@ import { authRoutes } from './routes/auth';
 import { workspaceRoutes } from './routes/workspace';
 import { workflowRoutes } from './routes/workflow';
 import { executionRoutes } from './routes/execution';
+import { triggerRoutes } from './routes/trigger';
+import { webhookRoutes } from './routes/webhook';
 import { authenticate } from './middlewares/auth';
 import { config } from './config/index.js';
 import { errorHandler } from './middlewares/error.js';
@@ -53,7 +55,11 @@ const start = async () => {
     fastify.register(workspaceRoutes, { prefix: '/workspaces' });
     fastify.register(workflowRoutes, { prefix: '/workflows' });
     fastify.register(executionRoutes, { prefix: '/executions' });
+    fastify.register(triggerRoutes, { prefix: '/workflows' });
   }, { prefix: '/api/v1' });
+
+  // Webhook routes (no auth - validated by webhook key)
+  server.register(webhookRoutes);
 
   await db.$connect();
   logger.info({ database: config.databaseUrl.slice(0, 30) + '...' }, 'Connected to database');
